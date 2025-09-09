@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AarXAyu Chat</title>
+    <title>Talksy Chat</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
         <div class="glass-container welcome-container">
             <div class="welcome-header">
                 <h1>Talksy Chat</h1>
-                <p>Chat with images, videos, and voice messages!</p>
+                <p>Chat with notifications, voice/video calls & media!</p>
             </div>
 
             <form class="welcome-form" id="joinForm">
@@ -46,8 +46,18 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <div class="notification-permission">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="enableNotifications" checked>
+                            <span class="checkmark"></span>
+                            Enable desktop notifications & sounds
+                        </label>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn-primary glass-btn" id="joinBtn">
-                    <span class="btn-text">Join Talksy Chat</span>
+                    <span class="btn-text">Join Advanced Chat</span>
                     <div class="btn-loading hidden">
                         <div class="spinner"></div>
                         Joining...
@@ -59,7 +69,7 @@
 
     <!-- Chat Interface -->
     <div id="chatInterface" class="chat-interface hidden">
-        <!-- Header -->
+        <!-- Header with notification controls -->
         <header class="chat-header glass-container">
             <div class="header-left">
                 <h1>Talksy Chat</h1>
@@ -69,6 +79,14 @@
                 </div>
             </div>
             <div class="header-right">
+                <div class="notification-controls">
+                    <button id="notificationToggle" class="notification-btn" title="Toggle Notifications">
+                        🔔
+                    </button>
+                    <button id="soundToggle" class="notification-btn" title="Toggle Sound">
+                        🔊
+                    </button>
+                </div>
                 <div class="current-user-info">
                     <img id="currentUserAvatar" src="" alt="Your avatar" class="current-user-avatar">
                     <span id="currentUsername">You</span>
@@ -80,14 +98,14 @@
         </header>
 
         <div class="chat-main">
-            <!-- Sidebar with online users -->
+            <!-- Enhanced sidebar with calling options -->
             <aside class="sidebar glass-container">
                 <div class="sidebar-header">
                     <h3>💫 Online Users</h3>
                     <span class="online-count" id="onlineCount">0</span>
                 </div>
                 <div class="users-list" id="usersList">
-                    <!-- Users will be populated here -->
+                    <!-- Users will be populated here with call buttons -->
                 </div>
             </aside>
 
@@ -95,7 +113,7 @@
             <main class="chat-content">
                 <div class="messages-container glass-container">
                     <div class="messages-header">
-                        <h3>🗨️Talksy Chat</h3>
+                        <h3>🗨️ Advanced Global Chat</h3>
                         <div class="chat-status">
                             <span class="status-indicator connected"></span>
                             Connected
@@ -106,8 +124,11 @@
                         <div class="welcome-message">
                             <div class="welcome-content">
                                 <h3>🎉 Welcome to Talksy Chat!</h3>
-                                <p>Now with image, video, and voice message support!</p>
+                                <p>Now with notifications, calling, and rich media!</p>
                                 <div class="feature-badges">
+                                    <span class="badge">🔔 Notifications</span>
+                                    <span class="badge">📞 Voice Calls</span>
+                                    <span class="badge">📹 Video Calls</span>
                                     <span class="badge">📸 Images</span>
                                     <span class="badge">🎥 Videos</span>
                                     <span class="badge">🎤 Voice</span>
@@ -204,6 +225,71 @@
         </div>
     </div>
 
+    <!-- Call Modal for incoming/outgoing calls -->
+    <div id="callModal" class="call-modal hidden">
+        <div class="call-modal-content glass-container">
+            <div class="call-header">
+                <h3 id="callTitle">📞 Voice Call</h3>
+                <div class="call-status" id="callStatus">Calling...</div>
+            </div>
+
+            <div class="call-user-info">
+                <img id="callUserAvatar" src="" alt="Caller avatar" class="call-avatar">
+                <div class="call-user-name" id="callUserName">Unknown User</div>
+            </div>
+
+            <!-- Video containers for video calls -->
+            <div id="videoContainer" class="video-container hidden">
+                <video id="localVideo" class="local-video" autoplay muted></video>
+                <video id="remoteVideo" class="remote-video" autoplay></video>
+            </div>
+
+            <div class="call-controls">
+                <button id="answerCallBtn" class="call-btn answer-btn hidden">
+                    📞 Answer
+                </button>
+                <button id="declineCallBtn" class="call-btn decline-btn">
+                    📞❌ Decline
+                </button>
+                <button id="endCallBtn" class="call-btn end-btn hidden">
+                    📞❌ End Call
+                </button>
+                <button id="muteBtn" class="call-btn mute-btn hidden">
+                    🎤 Mute
+                </button>
+                <button id="videoToggleBtn" class="call-btn video-btn hidden">
+                    📹 Video Off
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Permission Modal -->
+    <div id="notificationModal" class="notification-modal hidden">
+        <div class="notification-modal-content glass-container">
+            <div class="notification-header">
+                <h3>🔔 Enable Notifications</h3>
+            </div>
+            <div class="notification-body">
+                <p>Allow WorldChat to send you notifications for new messages and calls?</p>
+                <div class="notification-benefits">
+                    <div class="benefit">🔔 Get notified of new messages</div>
+                    <div class="benefit">📞 Receive call notifications</div>
+                    <div class="benefit">👥 Know when users come online</div>
+                    <div class="benefit">🔊 Play notification sounds</div>
+                </div>
+            </div>
+            <div class="notification-actions">
+                <button id="allowNotifications" class="btn-primary">
+                    Allow Notifications
+                </button>
+                <button id="denyNotifications" class="btn-secondary">
+                    Not Now
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Media Upload Progress -->
     <div id="uploadProgress" class="upload-progress hidden">
         <div class="upload-progress-content glass-container">
@@ -217,8 +303,20 @@
         </div>
     </div>
 
-    <!-- Toast notifications -->
+    <!-- Toast notifications container -->
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Desktop notification sound -->
+    <audio id="notificationSound" preload="auto">
+        <source src="sounds/notification.mp3" type="audio/mpeg">
+        <source src="sounds/notification.ogg" type="audio/ogg">
+    </audio>
+
+    <!-- Call sounds -->
+    <audio id="ringtone" preload="auto" loop>
+        <source src="sounds/ringtone.mp3" type="audio/mpeg">
+        <source src="sounds/ringtone.ogg" type="audio/ogg">
+    </audio>
 
     <!-- Socket.IO client -->
     <script src="/socket.io/socket.io.js"></script>
