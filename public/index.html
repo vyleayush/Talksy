@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AarXAyu Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="background">
+        <div class="bg-animation"></div>
+        <div class="bg-animation animation-delay-1"></div>
+        <div class="bg-animation animation-delay-2"></div>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen" class="welcome-screen">
+        <div class="glass-container welcome-container">
+            <div class="welcome-header">
+                <h1>AarXAyu Chat</h1>
+                <p>Chat with images, videos, and voice messages!</p>
+            </div>
+
+            <form class="welcome-form" id="joinForm">
+                <div class="form-group">
+                    <label class="form-label">Choose your username</label>
+                    <input type="text" id="usernameInput" class="form-control glass-input" 
+                           placeholder="Enter your username..." required maxlength="20">
+                    <div class="input-error" id="usernameError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Profile Picture (Optional)</label>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <div class="upload-icon">📸</div>
+                            <p>Click to upload or drag & drop</p>
+                            <span class="upload-hint">PNG, JPG up to 5MB</span>
+                        </div>
+                        <input type="file" id="profilePicInput" accept="image/*" hidden>
+                    </div>
+                    <div class="profile-preview hidden" id="profilePreview">
+                        <img id="previewImg" src="" alt="Profile preview">
+                        <button type="button" class="remove-btn" id="removeProfile">✕</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary glass-btn" id="joinBtn">
+                    <span class="btn-text">Join AarXAyu Chat</span>
+                    <div class="btn-loading hidden">
+                        <div class="spinner"></div>
+                        Joining...
+                    </div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chat Interface -->
+    <div id="chatInterface" class="chat-interface hidden">
+        <!-- Header -->
+        <header class="chat-header glass-container">
+            <div class="header-left">
+                <h1>AarXAyu Chat</h1>
+                <div class="user-count">
+                    <span class="online-indicator"></span>
+                    <span id="userCount">0 users online</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="current-user-info">
+                    <img id="currentUserAvatar" src="" alt="Your avatar" class="current-user-avatar">
+                    <span id="currentUsername">You</span>
+                </div>
+                <button id="leaveBtn" class="btn-secondary" title="Leave Chat">
+                    🚪 Leave
+                </button>
+            </div>
+        </header>
+
+        <div class="chat-main">
+            <!-- Sidebar with online users -->
+            <aside class="sidebar glass-container">
+                <div class="sidebar-header">
+                    <h3>💫 Online Users</h3>
+                    <span class="online-count" id="onlineCount">0</span>
+                </div>
+                <div class="users-list" id="usersList">
+                    <!-- Users will be populated here -->
+                </div>
+            </aside>
+
+            <!-- Chat messages area -->
+            <main class="chat-content">
+                <div class="messages-container glass-container">
+                    <div class="messages-header">
+                        <h3>🗨️ Enhanced Global Chat</h3>
+                        <div class="chat-status">
+                            <span class="status-indicator connected"></span>
+                            Connected
+                        </div>
+                    </div>
+
+                    <div class="messages-area" id="messagesArea">
+                        <div class="welcome-message">
+                            <div class="welcome-content">
+                                <h3>🎉 Welcome to AarXAyu Chat!</h3>
+                                <p>Now with image, video, and voice message support!</p>
+                                <div class="feature-badges">
+                                    <span class="badge">📸 Images</span>
+                                    <span class="badge">🎥 Videos</span>
+                                    <span class="badge">🎤 Voice</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="typing-indicator" id="typingIndicator">
+                        <div class="typing-animation">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <span class="typing-text"></span>
+                    </div>
+
+                    <!-- Enhanced Message Input with Media Controls -->
+                    <div class="message-input-container">
+                        <!-- Media Buttons Row -->
+                        <div class="media-controls glass-container">
+                            <button id="imageBtn" class="media-btn" title="Send Image">
+                                📸 <span>Image</span>
+                            </button>
+                            <button id="videoBtn" class="media-btn" title="Send Video">
+                                🎥 <span>Video</span>
+                            </button>
+                            <button id="voiceBtn" class="media-btn" title="Record Voice Message">
+                                🎤 <span>Voice</span>
+                            </button>
+                        </div>
+
+                        <!-- Text Input Row -->
+                        <div class="message-input-wrapper glass-container">
+                            <input type="text" id="messageInput" class="message-input" 
+                                   placeholder="Type your message..." maxlength="500">
+                            <button id="sendBtn" class="send-btn" title="Send message">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input type="file" id="imageInput" accept="image/*" hidden>
+    <input type="file" id="videoInput" accept="video/*" hidden>
+
+    <!-- Voice Recording Modal -->
+    <div id="voiceModal" class="voice-modal hidden">
+        <div class="voice-modal-content glass-container">
+            <div class="voice-header">
+                <h3>🎤 Record Voice Message</h3>
+                <button id="closeVoiceModal" class="close-btn">✕</button>
+            </div>
+
+            <div class="voice-controls">
+                <div class="voice-visualizer" id="voiceVisualizer">
+                    <div class="voice-bars">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                </div>
+
+                <div class="voice-info">
+                    <div class="recording-time" id="recordingTime">00:00</div>
+                    <div class="recording-status" id="recordingStatus">Click to start recording</div>
+                </div>
+
+                <div class="voice-buttons">
+                    <button id="startRecordBtn" class="btn-primary">
+                        🎤 Start Recording
+                    </button>
+                    <button id="stopRecordBtn" class="btn-secondary hidden">
+                        ⏹️ Stop Recording
+                    </button>
+                    <button id="playRecordBtn" class="btn-secondary hidden">
+                        ▶️ Play
+                    </button>
+                    <button id="sendVoiceBtn" class="btn-primary hidden">
+                        📤 Send Voice Message
+                    </button>
+                </div>
+            </div>
+
+            <audio id="voicePlayback" controls class="hidden"></audio>
+        </div>
+    </div>
+
+    <!-- Media Upload Progress -->
+    <div id="uploadProgress" class="upload-progress hidden">
+        <div class="upload-progress-content glass-container">
+            <div class="upload-info">
+                <span class="upload-filename"></span>
+                <span class="upload-status">Uploading...</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Socket.IO client -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
