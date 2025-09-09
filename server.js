@@ -40,7 +40,7 @@ const createStorage = (folder) => multer.diskStorage({
   }
 });
 
-// Different upload configurations
+// Upload configurations
 const uploadProfile = multer({
   storage: createStorage(''),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
@@ -89,9 +89,10 @@ const uploadVoice = multer({
   }
 });
 
-// Store active users and messages
+// Store active users, messages, and calls
 const activeUsers = new Map();
 const chatMessages = [];
+const activeCalls = new Map(); // Store ongoing calls
 let messageIdCounter = 1;
 
 // Serve the main page
@@ -170,7 +171,7 @@ app.post('/upload-voice', uploadVoice.single('voice'), (req, res) => {
   }
 });
 
-// Socket.io connection handling
+// Socket.io connection handling with advanced features
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
@@ -179,28 +180,37 @@ io.on('connection', (socket) => {
       id: socket.id,
       username: userData.username,
       avatar: userData.avatar,
+      isOnline: true,
+      lastSeen: new Date(),
       joinedAt: new Date()
     };
 
     activeUsers.set(socket.id, user);
 
+    // Broadcast user joined with notification
     socket.broadcast.emit('user-joined', {
+      userId: socket.id,
       username: user.username,
+      avatar: user.avatar,
       message: `${user.username} joined the chat!`,
       timestamp: new Date().toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit' 
-      })
+      }),
+      type: 'user-joined'
     });
 
+    // Send current state to new user
     socket.emit('active-users', Array.from(activeUsers.values()));
     socket.emit('message-history', chatMessages);
+
+    // Broadcast updated user list to all clients
     io.emit('active-users', Array.from(activeUsers.values()));
 
     console.log(`${userData.username} joined the chat`);
   });
 
-  // Handle different message types
+  // Handle different message types with notifications
   socket.on('send-message', (messageData) => {
     const user = activeUsers.get(socket.id);
 
@@ -214,7 +224,7 @@ io.on('connection', (socket) => {
       userId: socket.id,
       username: user.username,
       avatar: user.avatar,
-      type: messageData.type || 'text', // text, image, video, voice
+      type: messageData.type || 'text',
       message: messageData.message,
       fileUrl: messageData.fileUrl,
       fileName: messageData.fileName,
@@ -223,7 +233,8 @@ io.on('connection', (socket) => {
         hour: '2-digit', 
         minute: '2-digit' 
       }),
-      sentAt: new Date()
+      sentAt: new Date(),
+      isNotification: true // Enable notifications for messages
     };
 
     chatMessages.push(message);
@@ -233,10 +244,101 @@ io.on('connection', (socket) => {
       chatMessages.shift();
     }
 
+    // Broadcast message with notification flag
     io.emit('new-message', message);
     console.log(`${messageData.type} message from ${user.username}`);
   });
 
+  // Voice/Video calling features
+  socket.on('initiate-call', (data) => {
+    const caller = activeUsers.get(socket.id);
+    const targetUser = Array.from(activeUsers.values()).find(u => u.id === data.targetUserId);
+
+    if (caller && targetUser) {
+      const callId = `call-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      activeCalls.set(callId, {
+        callId,
+        callerId: socket.id,
+        callerUsername: caller.username,
+        callerAvatar: caller.avatar,
+        targetId: data.targetUserId,
+        targetUsername: targetUser.username,
+        callType: data.callType, // 'voice' or 'video'
+        status: 'ringing',
+        startedAt: new Date()
+      });
+
+      // Send call invitation to target user
+      socket.to(data.targetUserId).emit('incoming-call', {
+        callId,
+        callerId: socket.id,
+        callerUsername: caller.username,
+        callerAvatar: caller.avatar,
+        callType: data.callType
+      });
+
+      // Confirm call initiated to caller
+      socket.emit('call-initiated', { callId });
+    }
+  });
+
+  socket.on('respond-to-call', (data) => {
+    const call = activeCalls.get(data.callId);
+    if (call) {
+      if (data.accepted) {
+        call.status = 'accepted';
+        activeCalls.set(data.callId, call);
+
+        // Notify both users that call was accepted
+        socket.emit('call-accepted', { callId: data.callId });
+        socket.to(call.callerId).emit('call-accepted', { callId: data.callId });
+      } else {
+        // Call declined
+        activeCalls.delete(data.callId);
+        socket.to(call.callerId).emit('call-declined', { callId: data.callId });
+      }
+    }
+  });
+
+  socket.on('end-call', (data) => {
+    const call = activeCalls.get(data.callId);
+    if (call) {
+      activeCalls.delete(data.callId);
+
+      // Notify both participants
+      socket.emit('call-ended', { callId: data.callId });
+      socket.to(call.callerId === socket.id ? call.targetId : call.callerId)
+        .emit('call-ended', { callId: data.callId });
+    }
+  });
+
+  // WebRTC signaling for calls
+  socket.on('webrtc-offer', (data) => {
+    socket.to(data.targetId).emit('webrtc-offer', {
+      callId: data.callId,
+      offer: data.offer,
+      senderId: socket.id
+    });
+  });
+
+  socket.on('webrtc-answer', (data) => {
+    socket.to(data.targetId).emit('webrtc-answer', {
+      callId: data.callId,
+      answer: data.answer,
+      senderId: socket.id
+    });
+  });
+
+  socket.on('webrtc-ice-candidate', (data) => {
+    socket.to(data.targetId).emit('webrtc-ice-candidate', {
+      callId: data.callId,
+      candidate: data.candidate,
+      senderId: socket.id
+    });
+  });
+
+  // Typing indicators
   socket.on('typing-start', () => {
     const user = activeUsers.get(socket.id);
     if (user) {
@@ -259,22 +361,47 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Enhanced disconnect handling with notifications
   socket.on('disconnect', () => {
     const user = activeUsers.get(socket.id);
 
     if (user) {
-      activeUsers.delete(socket.id);
+      // Mark user as offline instead of removing
+      user.isOnline = false;
+      user.lastSeen = new Date();
+      activeUsers.set(socket.id, user);
 
+      // End any active calls
+      for (const [callId, call] of activeCalls) {
+        if (call.callerId === socket.id || call.targetId === socket.id) {
+          const otherUserId = call.callerId === socket.id ? call.targetId : call.callerId;
+          socket.to(otherUserId).emit('call-ended', { callId, reason: 'user-disconnected' });
+          activeCalls.delete(callId);
+        }
+      }
+
+      // Broadcast user left with notification
       socket.broadcast.emit('user-left', {
+        userId: socket.id,
         username: user.username,
         message: `${user.username} left the chat`,
         timestamp: new Date().toLocaleTimeString('en-US', { 
           hour: '2-digit', 
           minute: '2-digit' 
-        })
+        }),
+        type: 'user-left',
+        isNotification: true
       });
 
+      // Remove from active users after delay
+      setTimeout(() => {
+        activeUsers.delete(socket.id);
+        io.emit('active-users', Array.from(activeUsers.values()));
+      }, 60000); // Remove after 1 minute
+
+      // Broadcast updated user list
       io.emit('active-users', Array.from(activeUsers.values()));
+
       console.log(`${user.username} disconnected`);
     }
   });
@@ -292,17 +419,19 @@ app.use((error, req, res, next) => {
 
 // Start the server
 server.listen(PORT, () => {
-  console.log(`🚀 Enhanced WorldChat Server is running on http://localhost:${PORT}`);
-  console.log(`📁 Upload directories created:`);
+  console.log(`🚀 Advanced WorldChat Server is running on http://localhost:${PORT}`);
+  console.log(`📁 Upload directories:`);
   console.log(`   • Profile pics: ${path.join(__dirname, 'public/uploads')}`);
   console.log(`   • Images: ${path.join(__dirname, 'public/uploads/images')}`);
   console.log(`   • Videos: ${path.join(__dirname, 'public/uploads/videos')}`);
   console.log(`   • Voice: ${path.join(__dirname, 'public/uploads/voice')}`);
+  console.log(`🔔 Advanced notifications enabled`);
+  console.log(`📞 Voice/Video calling enabled`);
   console.log(`🌐 Open your browser and navigate to http://localhost:${PORT}`);
 });
 
 process.on('SIGINT', () => {
-  console.log('\n👋 Shutting down Enhanced WorldChat Server...');
+  console.log('\n👋 Shutting down Advanced WorldChat Server...');
   server.close(() => {
     console.log('✅ Server closed successfully');
     process.exit(0);
