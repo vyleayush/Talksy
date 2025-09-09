@@ -21,6 +21,14 @@
   --text-secondary: rgba(255, 255, 255, 0.8);
   --text-muted: rgba(255, 255, 255, 0.6);
 
+  /* Advanced Colors */
+  --call-green: #22c55e;
+  --call-red: #ef4444;
+  --call-blue: #3b82f6;
+  --notification-blue: #0ea5e9;
+  --online-green: #10b981;
+  --offline-gray: #6b7280;
+
   /* Media Colors */
   --media-image: #3b82f6;
   --media-video: #8b5cf6;
@@ -31,6 +39,8 @@
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  --gradient-call: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  --gradient-decline: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   --gradient-mesh: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #667eea 100%);
 
   /* Spacing */
@@ -201,10 +211,15 @@ body {
   font-size: 0.85rem;
   color: var(--text-primary);
   animation: slideInUp 0.6s ease-out;
+  white-space: nowrap;
 }
 
+.badge:nth-child(1) { animation-delay: 0s; }
 .badge:nth-child(2) { animation-delay: 0.1s; }
 .badge:nth-child(3) { animation-delay: 0.2s; }
+.badge:nth-child(4) { animation-delay: 0.3s; }
+.badge:nth-child(5) { animation-delay: 0.4s; }
+.badge:nth-child(6) { animation-delay: 0.5s; }
 
 /* Form Styles */
 .form-group {
@@ -256,6 +271,57 @@ body {
 .input-error.show {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Notification Permission Checkbox */
+.notification-permission {
+  margin-top: var(--spacing-md);
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.checkbox-container input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.checkbox-container input:checked + .checkmark {
+  background: var(--gradient-success);
+  border-color: var(--success);
+}
+
+.checkmark::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.checkbox-container input:checked + .checkmark::after {
+  opacity: 1;
 }
 
 /* Upload Area */
@@ -397,7 +463,7 @@ body {
   animation: slideInUp 0.8s ease-out;
 }
 
-/* Header */
+/* Enhanced Header with notification controls */
 .chat-header {
   display: flex;
   align-items: center;
@@ -444,6 +510,43 @@ body {
   gap: var(--spacing-md);
 }
 
+/* Notification Controls */
+.notification-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.notification-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-btn:hover {
+  background: var(--glass-bg-light);
+  transform: scale(1.05);
+}
+
+.notification-btn.disabled {
+  opacity: 0.5;
+  color: var(--text-muted);
+}
+
+.notification-btn.active {
+  background: var(--gradient-success);
+  border-color: var(--success);
+}
+
 .current-user-info {
   display: flex;
   align-items: center;
@@ -470,7 +573,7 @@ body {
   overflow: hidden;
 }
 
-/* Sidebar */
+/* Enhanced Sidebar with calling features */
 .sidebar {
   width: 280px;
   padding: var(--spacing-lg);
@@ -508,6 +611,7 @@ body {
   gap: var(--spacing-sm);
 }
 
+/* Enhanced User Items with Call Buttons */
 .user-item {
   display: flex;
   align-items: center;
@@ -518,6 +622,7 @@ body {
   border: 1px solid transparent;
   transition: all 0.3s ease;
   animation: slideInLeft 0.5s ease-out;
+  position: relative;
 }
 
 .user-item:hover {
@@ -531,6 +636,23 @@ body {
   border-radius: var(--radius-full);
   object-fit: cover;
   border: 2px solid var(--glass-border);
+  position: relative;
+}
+
+.user-avatar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--glass-bg);
+  background: var(--online-green);
+}
+
+.user-avatar.offline::after {
+  background: var(--offline-gray);
 }
 
 .user-info {
@@ -560,6 +682,45 @@ body {
   height: 6px;
   border-radius: var(--radius-full);
   background: var(--success);
+}
+
+/* Call Buttons in User List */
+.user-call-controls {
+  display: flex;
+  gap: var(--spacing-xs);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.user-item:hover .user-call-controls {
+  opacity: 1;
+}
+
+.call-user-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.voice-call-btn {
+  background: var(--gradient-call);
+  color: white;
+}
+
+.video-call-btn {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.call-user-btn:hover {
+  transform: scale(1.1);
 }
 
 /* Chat Content */
@@ -675,6 +836,16 @@ body {
   flex-direction: row-reverse;
 }
 
+.message.notification {
+  justify-content: center;
+  animation: notificationSlide 0.5s ease-out;
+}
+
+@keyframes notificationSlide {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 .message-avatar {
   width: 36px;
   height: 36px;
@@ -732,7 +903,26 @@ body {
   border-color: rgba(102, 126, 234, 0.3);
 }
 
-/* Media Message Styles */
+/* Notification Messages */
+.notification-message {
+  background: var(--notification-blue);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  text-align: center;
+  margin: var(--spacing-sm) auto;
+  max-width: 300px;
+  animation: notificationPulse 0.5s ease-out;
+}
+
+@keyframes notificationPulse {
+  0% { transform: scale(0.9); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Media Message Styles (keeping existing styles) */
 .message-media {
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -923,8 +1113,7 @@ body {
 .send-btn:active {
   transform: scale(0.95);
 }
-
-/* Voice Recording Modal */
+/* Voice Recording Modal (keeping existing styles) */
 .voice-modal {
   position: fixed;
   top: 0;
@@ -1063,7 +1252,235 @@ body {
   border-radius: var(--radius-md);
 }
 
-/* Upload Progress */
+/* Call Modal */
+.call-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.call-modal-content {
+  width: 90%;
+  max-width: 600px;
+  padding: var(--spacing-2xl);
+  text-align: center;
+  animation: slideInUp 0.5s ease-out;
+  position: relative;
+}
+
+.call-header {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.call-header h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+}
+
+.call-status {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  animation: pulse 2s infinite;
+}
+
+.call-user-info {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.call-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  border: 4px solid var(--glass-border);
+  object-fit: cover;
+  margin-bottom: var(--spacing-lg);
+  animation: callPulse 2s infinite;
+}
+
+@keyframes callPulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.call-user-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Video Container for Video Calls */
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: var(--glass-bg-dark);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+}
+
+.local-video {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  width: 150px;
+  height: 100px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--glass-border);
+  background: var(--glass-bg-dark);
+  z-index: 10;
+}
+
+.remote-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--glass-bg-dark);
+}
+
+/* Call Controls */
+.call-controls {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.call-btn {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.answer-btn {
+  background: var(--gradient-call);
+  color: white;
+  animation: callButtonPulse 1s infinite;
+}
+
+.decline-btn, .end-btn {
+  background: var(--gradient-decline);
+  color: white;
+}
+
+.mute-btn, .video-btn {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+}
+
+.mute-btn.muted {
+  background: var(--error);
+  color: white;
+}
+
+.video-btn.video-off {
+  background: var(--error);
+  color: white;
+}
+
+.call-btn:hover {
+  transform: scale(1.1);
+}
+
+.call-btn:active {
+  transform: scale(0.95);
+}
+
+@keyframes callButtonPulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Notification Permission Modal */
+.notification-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.notification-modal-content {
+  width: 90%;
+  max-width: 450px;
+  padding: var(--spacing-2xl);
+  text-align: center;
+  animation: slideInUp 0.5s ease-out;
+}
+
+.notification-header h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-lg);
+}
+
+.notification-body {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.notification-body p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.notification-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  text-align: left;
+}
+
+.benefit {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  padding: var(--spacing-sm);
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+}
+
+.notification-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Upload Progress (keeping existing styles) */
 .upload-progress {
   position: fixed;
   top: var(--spacing-lg);
@@ -1205,6 +1622,34 @@ body {
 .toast.success { border-left: 4px solid var(--success); }
 .toast.error { border-left: 4px solid var(--error); }
 .toast.warning { border-left: 4px solid var(--warning); }
+.toast.call { border-left: 4px solid var(--call-green); }
+.toast.notification { border-left: 4px solid var(--notification-blue); }
+
+/* Advanced Toast with Icons */
+.toast.with-icon {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.toast-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-title {
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+}
+
+.toast-message {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
 
 /* Utility Classes */
 .hidden { display: none !important; }
@@ -1257,6 +1702,16 @@ body {
     flex-shrink: 0;
     min-width: 120px;
   }
+
+  .call-controls {
+    gap: var(--spacing-md);
+  }
+
+  .call-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 1rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1298,6 +1753,25 @@ body {
   .voice-modal-content {
     width: 95%;
     padding: var(--spacing-lg);
+  }
+
+  .call-modal-content {
+    width: 95%;
+    padding: var(--spacing-lg);
+  }
+
+  .call-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .video-container {
+    height: 250px;
+  }
+
+  .local-video {
+    width: 100px;
+    height: 70px;
   }
 }
 
@@ -1353,5 +1827,24 @@ body {
   .voice-buttons .btn-primary,
   .voice-buttons .btn-secondary {
     min-width: 200px;
+  }
+
+  .call-controls {
+    gap: var(--spacing-sm);
+  }
+
+  .call-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 0.9rem;
+  }
+
+  .notification-actions {
+    flex-direction: column;
+  }
+
+  .notification-actions .btn-primary,
+  .notification-actions .btn-secondary {
+    width: 100%;
   }
 }
